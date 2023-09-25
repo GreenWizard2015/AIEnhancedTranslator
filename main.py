@@ -29,6 +29,11 @@ class App(tk.Frame):
     self._inputText = tkst.ScrolledText(owner)
     self._inputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
     self._inputText.bind("<Control-Return>", self.onForceTranslate)
+    # clear on escape
+    def clear(event): self._inputText.delete("1.0", tk.END)
+    self._inputText.bind("<Escape>", clear)
+    # focus on start
+    self._inputText.focus_set()
     return
   
   def UITextFor(self, text):
@@ -71,8 +76,6 @@ class App(tk.Frame):
 
   def startTranslate(self, force=False):
     # set output text to "Processing..."
-    self._fastOutputText.delete("1.0", tk.END)
-    self._fastOutputText.insert(tk.END, self.UITextFor("Processing..."))
     if force:
       self._fullOutputText.delete("1.0", tk.END)
       self._fullOutputText.insert(tk.END, self.UITextFor("Processing..."))
@@ -95,6 +98,9 @@ class App(tk.Frame):
   
   def endTranslate(self):
     return
+  
+  # TODO: language selection
+  def language(self): return {'code': 'sk', 'name': 'Slovak'}
   
 if '__main__' == __name__:
   root = tk.Tk()
