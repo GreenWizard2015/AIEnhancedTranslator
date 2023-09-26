@@ -41,6 +41,7 @@ class CWorker(threading.Thread):
     return
   
   def _performTranslate(self, text, force=False):
+    text = text.strip()
     try:
       self._events.startTranslate(force)
       fastText = self._fastTranslate(text)
@@ -56,12 +57,12 @@ class CWorker(threading.Thread):
     return
   
   def _fastTranslate(self, text):
-    if not text: return ""
+    if 0 == len(text): return ""
     translated = self._translatorFast.translate(text, dest=self._events.language()['code'])
     return translated.text
   
   def _fullTranslate(self, text, fastTranslation=None):
-    if not text:
+    if 0 == len(text):
       yield ""
       return
     
