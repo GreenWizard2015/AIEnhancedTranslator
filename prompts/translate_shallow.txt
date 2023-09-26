@@ -1,0 +1,15 @@
+$UserInput$: "{UserInput}"
+$FastTranslation$: "{FastTranslation}"
+$Task$: "translate $UserInput$ to {Language}. $FastTranslation$ is a fast translation. It may not be accurate. Take into account that user may use jokes, jargon, etc. in $UserInput$."
+Response in exactly following format:
+```
+@Translation:
+{{Translation of $UserInput$ to {Language}}}
+@Contains jokes: {{Yes/No}}
+@Contains jargon: {{Yes/No}}
+@Contains ambiguities: {{Yes/No}}
+@Contains sarcasm: {{Yes/No}}
+@Complex sentence: {{Yes/No}}
+@Complex topic: {{Yes/No}}
+@Notification: {{"Translation is not accurate and will be updated soon." in {Language}}}
+```

@@ -3,3 +3,5 @@ __pycache__
 /.pydevproject
 /.project
 /.vscode
+.env.local
+debug.log

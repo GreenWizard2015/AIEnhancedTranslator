@@ -1,6 +1,7 @@
 import threading
 from googletrans import Translator
 import time
+from .CAIAssistant import CAIAssistant
 
 class CWorker(threading.Thread):
   def __init__(self, events):
@@ -8,6 +9,7 @@ class CWorker(threading.Thread):
     self._events = events
     self._forceTranslateEvent = threading.Event()
     self._translatorFast = Translator(service_urls=['translate.google.com'])
+    self._assistant = CAIAssistant()
     return
   
   def run(self):
@@ -45,8 +47,10 @@ class CWorker(threading.Thread):
       self._events.fastTranslated(fastText)
       if not force: return
 
-      fullText = self._fullTranslate(text, fastTranslation=fastText)
-      self._events.fullTranslated(fullText)
+      for fullText in self._fullTranslate(text, fastTranslation=fastText):
+        self._events.fullTranslated(fullText)
+        if self._forceTranslateEvent.is_set(): break # stop if force another translate
+        continue
     finally:
       self._events.endTranslate()
     return
@@ -57,5 +61,16 @@ class CWorker(threading.Thread):
     return translated.text
   
   def _fullTranslate(self, text, fastTranslation=None):
-    if not text: return ""
-    return "Full translation: " + text + "\n"
+    if not text:
+      yield ""
+      return
+    
+    translationProcess = self._assistant.translate(
+      text,
+      fastTranslation=fastTranslation,
+      language=self._events.language()['name']
+    )
+    for translatedText in translationProcess:
+      yield translatedText
+      continue
+    return

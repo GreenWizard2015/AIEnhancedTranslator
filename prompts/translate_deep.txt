@@ -1,0 +1,14 @@
+$UserInput$: "{UserInput}"
+$FastTranslation$: "{FastTranslation}"
+$Extra flags$: {Flags}
+$Task$: translate $UserInput$ to {Language}. $FastTranslation$ is a reference. It may not be accurate. Take a deep breath and think step by step how you would translate $UserInput$ to {Language} with fully preserving initial meaning.
+Response in exactly following format:
+```
+@issues where isn't clear subject of the sentence (he/she/I/we ambiguities): {{issues}}
+@key thesis of $UserInput$ in English: {{thesis}}
+@notes about jargon, wordings, humor, etc: {{quote the parts of $UserInput$ that unclear and fixes for them}}
+@notes about ambiguous parts (misused me/we/I/etc): {{quote the parts of $UserInput$ that unclear and fixes for them}}
+@possible issues with translation: {{issues}}
+@$UserInput$ in English: {{translation}}
+@Translation: {{final translation in {Language} with all corrections after review}}
+```

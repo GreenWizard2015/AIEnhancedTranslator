@@ -1,13 +1,20 @@
-'''
-  simple tkinter app with an input text box
-  each 5 seconds thread will check if the input text box is changed
-  if changed, it will process the input text and show the result in the output text box
-  if user press ctrl+enter, it will force to process the input text and show the results in several output text boxes, per processing stage
-'''
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import tkinter as tk
 import tkinter.scrolledtext as tkst
 from core.worker import CWorker
-
+# set up logging
+import logging
+logging.basicConfig(
+  filename='debug.log', filemode='w',
+  level=logging.INFO, 
+  format='%(asctime)s %(levelname)s %(message)s'
+)
+# set up environment variables
+import dotenv
+dotenv.load_dotenv('.env')
+dotenv.load_dotenv('.env.local', override=True)
+# main app
 class App(tk.Frame):
   def __init__(self, master=None):
     super().__init__(master)
@@ -44,7 +51,7 @@ class App(tk.Frame):
     label = tk.Label(owner, text=self.UITextFor("Fast Translation:"), justify="left", anchor="w")
     label.pack(side="top", fill=tk.X)
 
-    self._fastOutputText = tkst.ScrolledText(owner)
+    self._fastOutputText = tkst.ScrolledText(owner, height=5)
     self._fastOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
 
     # full translation
@@ -69,7 +76,7 @@ class App(tk.Frame):
   
   def onForceTranslate(self, event):
     self._worker.forceTranslate()
-    return
+    return 'break' # prevent default action
   
   # events for worker
   def text(self): return self._inputText.get("1.0", tk.END)
