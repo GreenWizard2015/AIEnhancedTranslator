@@ -39,7 +39,7 @@ class CAIAssistant:
     text = '\n' + text + '\n' # hack to make it work
     tmp = [x for x in text.split('\n@')]
     # split into parts by :
-    tmp = [tuple(y.strip('\n" \t\r\'{}') for y in x.split(':', maxsplit=1)) for x in tmp]
+    tmp = [tuple(y.strip('\n" \t\r\'`{}') for y in x.split(':', maxsplit=1)) for x in tmp]
     # remove empty parts
     tmp = [x for x in tmp if (len(x) == 2) and (len(x[0]) > 0) and (len(x[1]) > 0)]
     return {k: v for k, v in tmp}
@@ -71,11 +71,11 @@ class CAIAssistant:
       }
     )
     flags = res['Flags']
-    totalIssues = sum([int(v) for k, v in flags.items()])
+    totalIssues = sum([int(v) for v in flags.values()])
     if totalIssues < 2:
       yield res['Translation']
       return # all ok, no need to run deep translation
-    yield res['Translation'] + '\n\n\n' + res.get('Notification', '')
+    yield res['Translation'], res.get('Notification', '')
 
     # run deep translation
     inputLanguage = res.get('Input language', 'unknown')

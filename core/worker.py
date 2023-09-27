@@ -74,7 +74,7 @@ class CWorker(threading.Thread):
       fastTranslation=fastTranslation,
       language=language['name']
     )
-    for translatedText in translationProcess:
-      yield translatedText
+    for translation in translationProcess:
+      yield translation
       continue
     return

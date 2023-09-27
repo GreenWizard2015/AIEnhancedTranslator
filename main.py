@@ -119,8 +119,15 @@ class App(tk.Frame):
     return
   
   def fullTranslated(self, text):
+    notification = None
+    if isinstance(text, tuple):
+      text, notification = text
+
     self._fullOutputText.delete("1.0", tk.END)
     self._fullOutputText.insert(tk.END, text)
+
+    if notification is not None:
+      self._fullOutputText.insert(tk.END, "\n----------------\n" + notification)
     return
   
   def error(self, e):
