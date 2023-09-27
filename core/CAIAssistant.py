@@ -81,6 +81,7 @@ class CAIAssistant:
     inputLanguage = res.get('Input language', 'unknown')
     # extract first word from input language, can be separated by space, comma, etc.,
     inputLanguage = re.split(r'[\s,]+', inputLanguage)[0]
+    inputLanguage = inputLanguage.strip().capitalize()
     res = self._executePrompt(
       self._translateDeep,
       {

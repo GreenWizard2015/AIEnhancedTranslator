@@ -16,6 +16,9 @@ import dotenv
 dotenv.load_dotenv('.env')
 dotenv.load_dotenv('.env.local', override=True)
 # main app
+# TODO: figure out how to enforce deep translation via UI
+# TODO: add translation history
+# TODO: add simple translation diff
 class App(tk.Frame):
   def __init__(self, master, languages, currentLanguage=None):
     super().__init__(master)
