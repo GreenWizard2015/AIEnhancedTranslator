@@ -53,7 +53,7 @@ class App(tk.Frame):
     )
     label.pack(side="top", fill=tk.X)
 
-    self._inputText = tkst.ScrolledText(owner)
+    self._inputText = tkst.ScrolledText(owner, wrap=tk.WORD)
     self._inputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
     self._inputText.bind("<Control-Return>", self.onForceTranslate)
     # clear on escape
@@ -89,7 +89,7 @@ class App(tk.Frame):
     )
     label.pack(side="top", fill=tk.X)
 
-    self._fastOutputText = tkst.ScrolledText(owner, height=15)
+    self._fastOutputText = tkst.ScrolledText(owner, height=15, wrap=tk.WORD)
     self._fastOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
 
     # full translation
@@ -99,7 +99,7 @@ class App(tk.Frame):
     )
     label.pack(side="top", fill=tk.X)
 
-    self._fullOutputText = tkst.ScrolledText(owner)
+    self._fullOutputText = tkst.ScrolledText(owner, wrap=tk.WORD)
     self._fullOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
     return
   
