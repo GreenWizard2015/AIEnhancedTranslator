@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import tkinter as tk
+from tkinter import ttk
 import tkinter.scrolledtext as tkst
 from core.worker import CWorker
 # set up logging
@@ -16,9 +17,11 @@ dotenv.load_dotenv('.env')
 dotenv.load_dotenv('.env.local', override=True)
 # main app
 class App(tk.Frame):
-  def __init__(self, master=None):
+  def __init__(self, master, languages, currentLanguage=None):
     super().__init__(master)
     self._master = master
+    self._languages = languages
+    self._currentLanguage = currentLanguage or self._languages.keys()[0]
     # set global font
     self._master.option_add("*Font", ("Arial", 16))
     self._master.title("AI Enhanced Translator")
@@ -46,12 +49,27 @@ class App(tk.Frame):
   def UITextFor(self, text):
     return text
   
+  def _UI_languageSelection(self, owner):
+    # target language selection via combobox, stick to top right corner
+    self._language = ttk.Combobox(
+      owner, state="readonly", width=20,
+      values=list(self._languages.values())
+    )
+    self._language.pack(side="top", anchor="ne", padx=5, pady=5)
+    self._language.bind("<<ComboboxSelected>>", self.onSelectLanguage)
+    try:
+      self._language.set('Slovak')
+    except tk.TclError:
+      pass
+    return
+  
   def _UI_outputArea(self, owner):
+    self._UI_languageSelection(owner)
     # fast translation
     label = tk.Label(owner, text=self.UITextFor("Fast Translation:"), justify="left", anchor="w")
     label.pack(side="top", fill=tk.X)
 
-    self._fastOutputText = tkst.ScrolledText(owner, height=5)
+    self._fastOutputText = tkst.ScrolledText(owner, height=15)
     self._fastOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
 
     # full translation
@@ -79,7 +97,11 @@ class App(tk.Frame):
     return 'break' # prevent default action
   
   # events for worker
-  def text(self): return self._inputText.get("1.0", tk.END)
+  def userInput(self):
+    currentLanguageCode = self._currentLanguage
+    currentLanguage = self._languages[currentLanguageCode]
+    language = {'code': currentLanguageCode, 'name': currentLanguage}
+    return self._inputText.get("1.0", tk.END), language
 
   def startTranslate(self, force=False):
     # set output text to "Processing..."
@@ -106,10 +128,24 @@ class App(tk.Frame):
   def endTranslate(self):
     return
   
-  # TODO: language selection
-  def language(self): return {'code': 'sk', 'name': 'Slovak'}
+  def onSelectLanguage(self, event):
+    language = self._language.get()
+    code = next((code for code, name in self._languages.items() if name == language), None)
+    if code is None: return
+ 
+    self._currentLanguage = code
+    # TODO: translate UI?
+    return
   
 if '__main__' == __name__:
-  root = tk.Tk()
-  app = App(master=root)
+  app = App(
+    master=tk.Tk(),
+    # TODO: load languages from config
+    languages={
+      'sk': 'Slovak',
+      'en': 'English',
+      'de': 'German',
+    },
+    currentLanguage='sk'
+  )
   app.mainloop()
