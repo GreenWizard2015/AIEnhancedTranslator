@@ -72,10 +72,9 @@ class CAIAssistant:
     translation = res['Translation']
     flags = res['Flags']
     totalIssues = sum([int(v) for v in flags.values()])
-    if totalIssues < 2:
-      return translation # all ok, no need to run deep translation
-    
-    return res, translation, res.get('Notification', '')
+    # if totalIssues < 2:
+    #   return translation # all ok, no need to run deep translation
+    return res, translation, totalIssues < 2
   
   def _translateDeep(self, text, translation, language, inputLanguage, flags):
     # extract first word from input language, can be separated by space, comma, etc.,
@@ -96,17 +95,15 @@ class CAIAssistant:
   
   def translate(self, text, fastTranslation, language):
     # run shallow translation
-    res = self._translateShallow(text=text, translation=fastTranslation, language=language)
-    if isinstance(res, str):
-      yield res
-      return # all ok, no need to run deep translation
-    
-    raw, translation, notification = res
-    yield translation, notification # yield shallow translation with notification
+    raw, translation, done = self._translateShallow(
+      text=text, translation=fastTranslation, language=language
+    )
+    yield translation, not done
+    if done: return
     # run deep translation
     yield self._translateDeep(
       text=text, translation=translation, language=language,
       inputLanguage=raw.get('Input language', 'unknown'),
       flags=raw['Flags']
-    )
+    ), False # no more pending translations
     return

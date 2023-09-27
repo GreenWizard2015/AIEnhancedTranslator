@@ -22,6 +22,11 @@ dotenv.load_dotenv('.env.local', override=True)
 class App(tk.Frame):
   def __init__(self, master, languages, currentLanguage=None):
     super().__init__(master)
+    self._localizationMap = {}
+    # predefine messages
+    self._localization('Processing...')
+    self._localization('Translation is not accurate and will be updated soon.')
+    # set up UI
     self._master = master
     self._languages = languages
     self._currentLanguage = currentLanguage or self._languages.keys()[0]
@@ -34,9 +39,18 @@ class App(tk.Frame):
     self._worker = CWorker(self)
     self._worker.start()
     return
+  
+  def _localization(self, text):
+    res = self._localizationMap.get(text)
+    if res is None:
+      self._localizationMap[text] = res = tk.StringVar(value=text)
+    return res
 
   def _UI_inputArea(self, owner):
-    label = tk.Label(owner, text="Input Text:", justify="left", anchor="w")
+    label = tk.Label(
+      owner, justify="left", anchor="w",
+      textvariable=self._localization("Input Text:")
+    )
     label.pack(side="top", fill=tk.X)
 
     self._inputText = tkst.ScrolledText(owner)
@@ -61,7 +75,7 @@ class App(tk.Frame):
     self._language.pack(side="top", anchor="ne", padx=5, pady=5)
     self._language.bind("<<ComboboxSelected>>", self.onSelectLanguage)
     try:
-      self._language.set('Slovak')
+      self._language.set(self._languages[self._currentLanguage])
     except tk.TclError:
       pass
     return
@@ -69,14 +83,20 @@ class App(tk.Frame):
   def _UI_outputArea(self, owner):
     self._UI_languageSelection(owner)
     # fast translation
-    label = tk.Label(owner, text=self.UITextFor("Fast Translation:"), justify="left", anchor="w")
+    label = tk.Label(
+      owner, justify="left", anchor="w",
+      textvariable=self._localization("Fast and inaccurate translation:")
+    )
     label.pack(side="top", fill=tk.X)
 
     self._fastOutputText = tkst.ScrolledText(owner, height=15)
     self._fastOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
 
     # full translation
-    label = tk.Label(owner, text=self.UITextFor("Full Translation:"), justify="left", anchor="w")
+    label = tk.Label(
+      owner, justify="left", anchor="w",
+      textvariable=self._localization("Slow and improved translation:")
+    )
     label.pack(side="top", fill=tk.X)
 
     self._fullOutputText = tkst.ScrolledText(owner)
@@ -110,7 +130,7 @@ class App(tk.Frame):
     # set output text to "Processing..."
     if force:
       self._fullOutputText.delete("1.0", tk.END)
-      self._fullOutputText.insert(tk.END, self.UITextFor("Processing..."))
+      self._fullOutputText.insert(tk.END, self._localization("Processing...").get())
     return
   
   def fastTranslated(self, text):
@@ -118,15 +138,14 @@ class App(tk.Frame):
     self._fastOutputText.insert(tk.END, text)
     return
   
-  def fullTranslated(self, text):
-    notification = None
-    if isinstance(text, tuple):
-      text, notification = text
-
+  def fullTranslated(self, text, pending):
     self._fullOutputText.delete("1.0", tk.END)
     self._fullOutputText.insert(tk.END, text)
 
-    if notification is not None:
+    if pending:
+      notification = self._localization(
+        "Translation is not accurate and will be updated soon."
+      ).get()
       self._fullOutputText.insert(tk.END, "\n----------------\n" + notification)
     return
   
@@ -144,8 +163,14 @@ class App(tk.Frame):
     if code is None: return
  
     self._currentLanguage = code
-    # TODO: translate UI?
     return
+  
+  def updateLocalization(self, localization):
+    for k, v in localization.items():
+      self._localizationMap[k].set(v)
+    return
+  
+  def localizationStrings(self): return list(self._localizationMap.keys())
   
 if '__main__' == __name__:
   app = App(

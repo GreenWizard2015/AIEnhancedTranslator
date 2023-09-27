@@ -12,5 +12,4 @@ reply in exactly next format:
 @Contains sarcasm: {{Yes/No}}
 @Complex sentence: {{Yes/No}}
 @Complex topic: {{Yes/No}}
-@Notification: {{"Translation is not accurate and will be updated soon." in {Language}, no comments}}
 ```

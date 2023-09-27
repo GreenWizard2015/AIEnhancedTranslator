@@ -1,6 +1,7 @@
 import threading
 from googletrans import Translator
 import time
+from functools import lru_cache
 from .CAIAssistant import CAIAssistant
 
 class CWorker(threading.Thread):
@@ -22,7 +23,19 @@ class CWorker(threading.Thread):
       self._forceTranslateEvent.clear()
 
       text, language = self._events.userInput()
-      isForceTranslate = isForceTranslate or (language['code'] != oldLanguage['code'])
+      isLanguageChanged = language['code'] != oldLanguage['code']
+      if isLanguageChanged: # reload UI translation if language changed
+        try:
+          newLocalization = self._updateLocalization(
+            languageName=language['name'], languageCode=language['code']
+          )
+          self._events.updateLocalization(newLocalization)
+          oldText = None # reset text
+          oldLanguage = dict(language)
+        except Exception as e:
+          self._events.error(e)
+        continue
+      
       T = time.time()
       if not isForceTranslate:
         if text == oldText: continue # Not changed
@@ -51,8 +64,10 @@ class CWorker(threading.Thread):
       self._events.fastTranslated(fastText)
       if not force: return
 
-      for fullText in self._fullTranslate(text, fastTranslation=fastText, language=language):
-        self._events.fullTranslated(fullText)
+
+      translationProcess = self._fullTranslate(text, fastTranslation=fastText, language=language)
+      for fullText, hasMore in translationProcess:
+        self._events.fullTranslated(fullText, pending=hasMore)
         if self._forceTranslateEvent.is_set(): break # stop if force another translate
         continue
     finally:
@@ -78,3 +93,13 @@ class CWorker(threading.Thread):
       yield translation
       continue
     return
+  
+  @lru_cache(maxsize=None)
+  def _updateLocalization(self, languageName, languageCode):
+    strings = self._events.localizationStrings()
+    res = self._translatorFast.translate('\n'.join(strings), dest=languageCode).text.split('\n')
+    res = [x.strip() for x in res]
+    res = [x for x in res if len(x) > 0]
+    assert len(strings) == len(res)
+    res = {k: v for k, v in zip(strings, res)}
+    return res
