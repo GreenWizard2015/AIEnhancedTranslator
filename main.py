@@ -163,6 +163,7 @@ class App(tk.Frame):
     if code is None: return
  
     self._currentLanguage = code
+    self._worker.forceTranslate() # hack to force translation
     return
   
   def updateLocalization(self, localization):
