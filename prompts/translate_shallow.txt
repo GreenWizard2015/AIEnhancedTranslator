@@ -1,7 +1,7 @@
 $UserInput$: "{UserInput}"
-$FastTranslation$: "{FastTranslation}"
-$Task$: "translate $UserInput$ to {Language}. $FastTranslation$ is a fast translation. It may not be accurate. Take into account that user may use jokes, jargon, etc. in $UserInput$."
-Response in exactly following format:
+$Reference$: "{FastTranslation}"
+$Task$: translate $UserInput$ to {Language}. Take into account that user may use jokes, jargon, etc. in $UserInput$.
+reply in exactly next format:
 ```
 @Input language: {{main language of $UserInput$, single language}}
 @Translation:
@@ -12,5 +12,5 @@ Response in exactly following format:
 @Contains sarcasm: {{Yes/No}}
 @Complex sentence: {{Yes/No}}
 @Complex topic: {{Yes/No}}
-@Notification: {{"Translation is not accurate and will be updated soon." in {Language}}}
+@Notification: {{"Translation is not accurate and will be updated soon." in {Language}, no comments}}
 ```

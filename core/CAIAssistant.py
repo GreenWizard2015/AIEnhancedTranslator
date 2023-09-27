@@ -51,6 +51,7 @@ class CAIAssistant:
       'FastTranslation': fastTranslation,
       'Language': language
     })
+    logging.info(res)
     # extract translation
     translation = self._extractParts(res)
     logging.info(json.dumps(translation, indent=2))
@@ -73,6 +74,7 @@ class CAIAssistant:
       'InputLanguage': translation.get('Input language', 'unknown'),
       'Flags': ', '.join([k for k, v in flags.items() if v])
     })
+    logging.info(res)
     # extract final translation
     translation = self._extractParts(res)
     logging.info(json.dumps(translation, indent=2))
