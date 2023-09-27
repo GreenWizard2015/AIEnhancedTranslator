@@ -11,7 +11,7 @@ class CAIAssistant:
       promptsFolder = os.path.join(os.path.dirname(__file__), '../prompts')
     self._LLM = ChatOpenAI(model="gpt-3.5-turbo")
 
-    self._translateShallow = LLMChain(
+    self._translateShallowQuery = LLMChain(
       llm=self._LLM,
       prompt=ChatPromptTemplate.from_messages([
         HumanMessagePromptTemplate(
@@ -22,7 +22,7 @@ class CAIAssistant:
         ),
       ]),
     )
-    self._translateDeep = LLMChain(
+    self._translateDeepQuery = LLMChain(
       llm=self._LLM,
       prompt=ChatPromptTemplate.from_messages([
         HumanMessagePromptTemplate(
@@ -60,37 +60,53 @@ class CAIAssistant:
     res['Flags'] = flags
     return res
   
-  def translate(self, text, fastTranslation, language):
-    # run shallow translation
+  def _translateShallow(self, text, translation, language):
     res = self._executePrompt(
-      self._translateShallow,
+      self._translateShallowQuery,
       {
         'UserInput': text,
-        'FastTranslation': fastTranslation,
+        'FastTranslation': translation,
         'Language': language
       }
     )
+    translation = res['Translation']
     flags = res['Flags']
     totalIssues = sum([int(v) for v in flags.values()])
     if totalIssues < 2:
-      yield res['Translation']
-      return # all ok, no need to run deep translation
-    yield res['Translation'], res.get('Notification', '')
-
-    # run deep translation
-    inputLanguage = res.get('Input language', 'unknown')
+      return translation # all ok, no need to run deep translation
+    
+    return res, translation, res.get('Notification', '')
+  
+  def _translateDeep(self, text, translation, language, inputLanguage, flags):
     # extract first word from input language, can be separated by space, comma, etc.,
     inputLanguage = re.split(r'[\s,]+', inputLanguage)[0]
     inputLanguage = inputLanguage.strip().capitalize()
+
     res = self._executePrompt(
-      self._translateDeep,
+      self._translateDeepQuery,
       {
         'UserInput': text,
-        'FastTranslation': res['Translation'], # use shallow translation as reference
+        'FastTranslation': translation,
         'Language': language,
         'InputLanguage': inputLanguage,
         'Flags': ', '.join([k for k, v in flags.items() if v])
       }
     )
-    yield res['Translation']
+    return res['Translation']
+  
+  def translate(self, text, fastTranslation, language):
+    # run shallow translation
+    res = self._translateShallow(text=text, translation=fastTranslation, language=language)
+    if isinstance(res, str):
+      yield res
+      return # all ok, no need to run deep translation
+    
+    raw, translation, notification = res
+    yield translation, notification # yield shallow translation with notification
+    # run deep translation
+    yield self._translateDeep(
+      text=text, translation=translation, language=language,
+      inputLanguage=raw.get('Input language', 'unknown'),
+      flags=raw['Flags']
+    )
     return
