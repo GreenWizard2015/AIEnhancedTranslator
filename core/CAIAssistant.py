@@ -1,4 +1,4 @@
-import os, json
+import os, json, re
 import logging
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import (ChatPromptTemplate, HumanMessagePromptTemplate)
@@ -78,13 +78,16 @@ class CAIAssistant:
     yield res['Translation'] + '\n\n\n' + res.get('Notification', '')
 
     # run deep translation
+    inputLanguage = res.get('Input language', 'unknown')
+    # extract first word from input language, can be separated by space, comma, etc.,
+    inputLanguage = re.split(r'[\s,]+', inputLanguage)[0]
     res = self._executePrompt(
       self._translateDeep,
       {
         'UserInput': text,
         'FastTranslation': res['Translation'], # use shallow translation as reference
         'Language': language,
-        'InputLanguage': res.get('Input language', 'unknown'),
+        'InputLanguage': inputLanguage,
         'Flags': ', '.join([k for k, v in flags.items() if v])
       }
     )
