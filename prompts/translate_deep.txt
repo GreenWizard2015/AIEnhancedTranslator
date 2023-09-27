@@ -1,7 +1,7 @@
 $UserInput$: "{UserInput}"
 $Reference$: "{FastTranslation}"
 $Extra flags$: {Flags}
-$Task$: translate $UserInput$ to {Language}. $Reference$ may not be accurate. Refine step by step translation of $UserInput$ to {Language} while keeping the meaning as close as possible to $UserInput$. Consider $Extra flags$.
+$Task$: translate $UserInput$ to {Language}. $Reference$ may not be accurate. Refine step by step translation of $UserInput$ to {Language} while keeping the meaning as close as possible to $UserInput$. Consider $Extra flags$. Input text is in {InputLanguage}, consider their mentality and cultural differences. Suggest clarifications, that would be useful for translation.
 Response in exactly following format:
 ```
 @$UserInput$ in English: {{here is $UserInput$ in English}}
@@ -13,7 +13,7 @@ Response in exactly following format:
   1. {{quote the parts needing clarity, jargon, etc.}}
 @List of ambiguous pronoun usage (at least 3):
   1. {{quote the parts with pronoun ambiguities}}
-@List of suggested translations to {Language} with corresponding fixes (per issue):
-  1. {{fixes. Resolve all issues. Resolve all ambiguities by most likely meaning.}}
+@List of ALL resolved issues described above:
+  1. {{Resolve issues and ambiguities by most likely meaning. Provide translation to {Language}}}
 @Translation: {{here is $UserInput$ in {Language} with all fixes}}
 ```

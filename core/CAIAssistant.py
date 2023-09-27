@@ -28,7 +28,7 @@ class CAIAssistant:
         HumanMessagePromptTemplate(
           prompt=PromptTemplate.from_file(
             os.path.join(promptsFolder, 'translate_deep.txt'),
-            input_variables=['UserInput', 'FastTranslation', 'Language', 'Flags']
+            input_variables=['UserInput', 'FastTranslation', 'Language', 'Flags', 'InputLanguage']
           )
         ),
       ]),
@@ -70,6 +70,7 @@ class CAIAssistant:
       'UserInput': text,
       'FastTranslation': translation['Translation'], # use shallow translation as reference
       'Language': language,
+      'InputLanguage': translation.get('Input language', 'unknown'),
       'Flags': ', '.join([k for k, v in flags.items() if v])
     })
     # extract final translation

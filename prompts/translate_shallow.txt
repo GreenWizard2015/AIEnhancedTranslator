@@ -3,6 +3,7 @@ $FastTranslation$: "{FastTranslation}"
 $Task$: "translate $UserInput$ to {Language}. $FastTranslation$ is a fast translation. It may not be accurate. Take into account that user may use jokes, jargon, etc. in $UserInput$."
 Response in exactly following format:
 ```
+@Input language: {{main language of $UserInput$, single language}}
 @Translation:
 {{Translation of $UserInput$ to {Language}}}
 @Contains jokes: {{Yes/No}}
