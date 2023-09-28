@@ -45,10 +45,12 @@ class CAIAssistant:
     return {k: v for k, v in tmp}
   
   def _executePrompt(self, prompt, variables):
+    rawPrompt = prompt.prompt.format_prompt(**variables).to_string()
+    logging.info('Raw prompt: ' + rawPrompt)
     res = prompt.run(variables)
-    logging.info(res)
+    logging.info('Raw result: ' + res)
     res = self._extractParts(res)
-    logging.info(json.dumps(res, indent=2))
+    logging.info('Extracted result: ' + json.dumps(res, indent=2))
     flags = {
       k: v.lower() == 'yes'
       for k, v in res.items()

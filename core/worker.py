@@ -22,7 +22,10 @@ class CWorker(threading.Thread):
       isForceTranslate = self._forceTranslateEvent.wait(5)
       self._forceTranslateEvent.clear()
 
-      text, language = self._events.userInput()
+      userInput = self._events.userInput()
+      text = userInput['text']
+      language = userInput['language']
+
       isLanguageChanged = language['code'] != oldLanguage['code']
       if isLanguageChanged: # reload UI translation if language changed
         try:
@@ -64,7 +67,6 @@ class CWorker(threading.Thread):
       self._events.fastTranslated(fastText)
       if not force: return
 
-
       translationProcess = self._fullTranslate(text, fastTranslation=fastText, language=language)
       for fullText, hasMore in translationProcess:
         self._events.fullTranslated(fullText, pending=hasMore)
@@ -85,9 +87,8 @@ class CWorker(threading.Thread):
       return
     
     translationProcess = self._assistant.translate(
-      text,
+      text, language=language['name'],
       fastTranslation=fastTranslation,
-      language=language['name']
     )
     for translation in translationProcess:
       yield translation

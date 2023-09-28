@@ -31,10 +31,10 @@ class App(tk.Frame):
     self._languages = languages
     self._currentLanguage = currentLanguage or self._languages.keys()[0]
     # set global font
-    self._master.option_add("*Font", ("Arial", 16))
+    self._master.option_add("*Font", ("Arial", 14))
     self._master.title("AI Enhanced Translator")
+    self._master.geometry("800x600")
     self._UI_init()
-    self.pack()
     
     self._worker = CWorker(self)
     self._worker.start()
@@ -51,20 +51,21 @@ class App(tk.Frame):
       owner, justify="left", anchor="w",
       textvariable=self._localization("Input Text:")
     )
-    label.pack(side="top", fill=tk.X)
+    label.grid(row=0, column=0, sticky="ew")
 
     self._inputText = tkst.ScrolledText(owner, wrap=tk.WORD)
-    self._inputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
+    self._inputText.grid(row=1, column=0, sticky="nsew")
     self._inputText.bind("<Control-Return>", self.onForceTranslate)
     # clear on escape
     def clear(event): self._inputText.delete("1.0", tk.END)
     self._inputText.bind("<Escape>", clear)
     # focus on start
     self._inputText.focus_set()
+
+    # configure grid
+    owner.grid_columnconfigure(0, weight=1)
+    owner.grid_rowconfigure(1, weight=1)
     return
-  
-  def UITextFor(self, text):
-    return text
   
   def _UI_languageSelection(self, owner):
     # target language selection via combobox, stick to top right corner
@@ -72,27 +73,25 @@ class App(tk.Frame):
       owner, state="readonly", width=20,
       values=list(self._languages.values())
     )
-    self._language.pack(side="top", anchor="ne", padx=5, pady=5)
     self._language.bind("<<ComboboxSelected>>", self.onSelectLanguage)
     try:
       self._language.set(self._languages[self._currentLanguage])
     except tk.TclError:
       pass
-    return
-  
-  def _UI_outputArea(self, owner):
-    self._UI_languageSelection(owner)
-    # fast translation
+    return self._language
+
+  def _UI_fastTranslation(self, owner):
     label = tk.Label(
       owner, justify="left", anchor="w",
       textvariable=self._localization("Fast and inaccurate translation:")
     )
     label.pack(side="top", fill=tk.X)
 
-    self._fastOutputText = tkst.ScrolledText(owner, height=15, wrap=tk.WORD)
+    self._fastOutputText = tkst.ScrolledText(owner, wrap=tk.WORD)
     self._fastOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
-
-    # full translation
+    return
+  
+  def _UI_fullTranslation(self, owner):
     label = tk.Label(
       owner, justify="left", anchor="w",
       textvariable=self._localization("Slow and improved translation:")
@@ -103,15 +102,35 @@ class App(tk.Frame):
     self._fullOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
     return
   
+  def _UI_outputArea(self, owner):
+    # 3 rows, 1 column. First row always same height, second half of third row
+    owner.grid_columnconfigure(0, weight=1)
+    owner.grid_rowconfigure(0, weight=0)
+    owner.grid_rowconfigure(1, weight=2)
+    owner.grid_rowconfigure(2, weight=1)
+    # language selection
+    self._UI_languageSelection(owner).grid(row=0, column=0, sticky="ne")
+    # fast translation frame
+    fastTranslationFrame = tk.Frame(owner)
+    fastTranslationFrame.grid(row=1, column=0, sticky="nsew")
+    self._UI_fastTranslation(fastTranslationFrame)
+    # full translation frame
+    fullTranslationFrame = tk.Frame(owner)
+    fullTranslationFrame.grid(row=2, column=0, sticky="nsew")
+    self._UI_fullTranslation(fullTranslationFrame)
+    return
+  
   def _UI_init(self):
+    # 1 row, 2 columns
+    self._master.grid_columnconfigure((0,1), weight=1)
+    self._master.grid_rowconfigure(0, weight=1)
     # Two vertical frames for input and output
     leftFrame = tk.Frame(self._master)
-    leftFrame.pack(side="left", fill=tk.BOTH, expand=tk.YES)
+    leftFrame.grid(row=0, column=0, sticky="nsew")
     self._UI_inputArea(leftFrame)
 
     rightFrame = tk.Frame(self._master)
-    rightFrame.pack(side="right", fill=tk.BOTH, expand=tk.YES)
-
+    rightFrame.grid(row=0, column=1, sticky="nsew")
     self._UI_outputArea(rightFrame)
     return
   
@@ -124,7 +143,10 @@ class App(tk.Frame):
     currentLanguageCode = self._currentLanguage
     currentLanguage = self._languages[currentLanguageCode]
     language = {'code': currentLanguageCode, 'name': currentLanguage}
-    return self._inputText.get("1.0", tk.END), language
+    return {
+      'language': language,
+      'text': self._inputText.get("1.0", tk.END).strip(),
+    }
 
   def startTranslate(self, force=False):
     # set output text to "Processing..."
