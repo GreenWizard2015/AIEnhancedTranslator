@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
 import tkinter.scrolledtext as tkst
+import json
 from core.worker import CWorker
 # set up logging
 import logging
@@ -21,8 +22,9 @@ dotenv.load_dotenv('.env.local', override=True)
 # TODO: add translation history
 # TODO: add simple translation diff
 class App(tk.Frame):
-  def __init__(self, master, languages, currentLanguage=None):
+  def __init__(self, master, languages, configs):
     super().__init__(master)
+    self._configs = configs
     self._localizationMap = {}
     # predefine messages
     self._localization('Processing...')
@@ -30,7 +32,7 @@ class App(tk.Frame):
     # set up UI
     self._master = master
     self._languages = languages
-    self._currentLanguage = currentLanguage or self._languages.keys()[0]
+    self._currentLanguage = self._configs.get('language') or 'en'
     # set global font
     self._master.option_add("*Font", ("Arial", 14))
     self._master.title("AI Enhanced Translator")
@@ -194,6 +196,7 @@ class App(tk.Frame):
     if code is None: return
  
     self._currentLanguage = code
+    self._configs['language'] = code
     self._worker.forceTranslate() # hack to force translation
     return
   
@@ -211,18 +214,27 @@ class App(tk.Frame):
       parent=self._master
     )
     if newKey is None: return
-    # self._worker.switchAPIKey(newKey)
+    self._worker.bindAPI(newKey)
     return
   
-if '__main__' == __name__:
-  app = App(
-    master=tk.Tk(),
-    # TODO: load languages from config
-    languages={
-      'sk': 'Slovak',
-      'en': 'English',
-      'de': 'German',
-    },
-    currentLanguage='sk'
-  )
+  def configs(self): return self._configs
+# End of class
+
+def main():
+  # load languages from data/languages.json
+  with open('data/languages.json', 'r') as f: languages = json.load(f)
+  # load configs
+  configs = {}
+  try:
+    with open('data/configs.json', 'r') as f: configs = json.load(f)
+  except: pass
+
+  app = App(master=tk.Tk(), languages=languages, configs=configs)
   app.mainloop()
+  # save configs on exit
+  configs = app.configs()
+  with open('data/configs.json', 'w') as f: json.dump(configs, f, indent=2)
+  return
+
+if '__main__' == __name__:
+  main()

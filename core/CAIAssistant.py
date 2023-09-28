@@ -8,7 +8,7 @@ from langchain.chains import LLMChain
 class CAIAssistant:
   def __init__(self, promptsFolder=None, openai_api_key=None):
     if promptsFolder is None:
-      promptsFolder = os.path.join(os.path.dirname(__file__), '../prompts')
+      promptsFolder = os.path.join(os.path.dirname(__file__), '../data')
     self._promptsFolder = promptsFolder
     self.bindAPI(openai_api_key=openai_api_key)
     return
@@ -41,6 +41,7 @@ class CAIAssistant:
           ),
         ]),
       )
+      self._connected = True
     except Exception as e:
       logging.error('Failed to bind API: ' + str(e))
     return

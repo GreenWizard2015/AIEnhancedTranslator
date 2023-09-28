@@ -104,3 +104,8 @@ class CWorker(threading.Thread):
     assert len(strings) == len(res)
     res = {k: v for k, v in zip(strings, res)}
     return res
+  
+  def bindAPI(self, key):
+    self._assistant.bindAPI(key)
+    return
+  
