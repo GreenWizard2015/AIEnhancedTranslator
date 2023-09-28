@@ -6,33 +6,43 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
 class CAIAssistant:
-  def __init__(self, promptsFolder=None):
+  def __init__(self, promptsFolder=None, openai_api_key=None):
     if promptsFolder is None:
       promptsFolder = os.path.join(os.path.dirname(__file__), '../prompts')
-    self._LLM = ChatOpenAI(model="gpt-3.5-turbo")
+    self._promptsFolder = promptsFolder
+    self.bindAPI(openai_api_key=openai_api_key)
+    return
 
-    self._translateShallowQuery = LLMChain(
-      llm=self._LLM,
-      prompt=ChatPromptTemplate.from_messages([
-        HumanMessagePromptTemplate(
-          prompt=PromptTemplate.from_file(
-            os.path.join(promptsFolder, 'translate_shallow.txt'),
-            input_variables=['UserInput', 'FastTranslation', 'Language']
-          )
-        ),
-      ]),
-    )
-    self._translateDeepQuery = LLMChain(
-      llm=self._LLM,
-      prompt=ChatPromptTemplate.from_messages([
-        HumanMessagePromptTemplate(
-          prompt=PromptTemplate.from_file(
-            os.path.join(promptsFolder, 'translate_deep.txt'),
-            input_variables=['UserInput', 'FastTranslation', 'Language', 'Flags', 'InputLanguage']
-          )
-        ),
-      ]),
-    )
+  # Hacky way to switch API key
+  def bindAPI(self, openai_api_key):
+    self._connected = False
+    try:
+      promptsFolder = self._promptsFolder
+      self._LLM = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=openai_api_key)
+      self._translateShallowQuery = LLMChain(
+        llm=self._LLM,
+        prompt=ChatPromptTemplate.from_messages([
+          HumanMessagePromptTemplate(
+            prompt=PromptTemplate.from_file(
+              os.path.join(promptsFolder, 'translate_shallow.txt'),
+              input_variables=['UserInput', 'FastTranslation', 'Language']
+            )
+          ),
+        ]),
+      )
+      self._translateDeepQuery = LLMChain(
+        llm=self._LLM,
+        prompt=ChatPromptTemplate.from_messages([
+          HumanMessagePromptTemplate(
+            prompt=PromptTemplate.from_file(
+              os.path.join(promptsFolder, 'translate_deep.txt'),
+              input_variables=['UserInput', 'FastTranslation', 'Language', 'Flags', 'InputLanguage']
+            )
+          ),
+        ]),
+      )
+    except Exception as e:
+      logging.error('Failed to bind API: ' + str(e))
     return
   
   def _extractParts(self, text):
@@ -95,6 +105,8 @@ class CAIAssistant:
     return res['Translation']
   
   def translate(self, text, fastTranslation, language):
+    if not self._connected:
+      raise Exception('Not connected to API')
     # run shallow translation
     raw, translation, done = self._translateShallow(
       text=text, translation=fastTranslation, language=language

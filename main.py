@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import tkinter as tk
 from tkinter import ttk
+from tkinter import simpledialog
 import tkinter.scrolledtext as tkst
 from core.worker import CWorker
 # set up logging
@@ -108,6 +109,7 @@ class App(tk.Frame):
     owner.grid_rowconfigure(0, weight=0)
     owner.grid_rowconfigure(1, weight=2)
     owner.grid_rowconfigure(2, weight=1)
+    owner.grid_rowconfigure(3, weight=0)
     # language selection
     self._UI_languageSelection(owner).grid(row=0, column=0, sticky="ne")
     # fast translation frame
@@ -118,6 +120,13 @@ class App(tk.Frame):
     fullTranslationFrame = tk.Frame(owner)
     fullTranslationFrame.grid(row=2, column=0, sticky="nsew")
     self._UI_fullTranslation(fullTranslationFrame)
+
+    # switch API key
+    btn = tk.Button(
+      owner, command=self.onSwitchAPIKey,
+      textvariable=self._localization("Switch API key")
+    )
+    btn.grid(row=3, column=0, pady=5)
     return
   
   def _UI_init(self):
@@ -172,7 +181,7 @@ class App(tk.Frame):
     return
   
   def error(self, e):
-    self._fastOutputText.delete("1.0", tk.END)
+    self._fullOutputText.delete("1.0", tk.END)
     self._fullOutputText.insert(tk.END, "Error: " + str(e) + "\n")
     return
   
@@ -194,6 +203,16 @@ class App(tk.Frame):
     return
   
   def localizationStrings(self): return list(self._localizationMap.keys())
+
+  def onSwitchAPIKey(self):
+    newKey = simpledialog.askstring(
+      'Switch API key',
+      'Enter new API key:',
+      parent=self._master
+    )
+    if newKey is None: return
+    # self._worker.switchAPIKey(newKey)
+    return
   
 if '__main__' == __name__:
   app = App(
