@@ -72,9 +72,8 @@ class CAIAssistant:
     translation = res['Translation']
     flags = res['Flags']
     totalIssues = sum([int(v) for v in flags.values()])
-    # if totalIssues < 2:
-    #   return translation # all ok, no need to run deep translation
-    return res, translation, totalIssues < 2
+    done = (totalIssues < 2)
+    return res, translation, done
   
   def _translateDeep(self, text, translation, language, inputLanguage, flags):
     # extract first word from input language, can be separated by space, comma, etc.,
