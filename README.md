@@ -2,6 +2,8 @@
 
 The **AI Enhanced Translator** is a powerful tool that harnesses the capabilities of artificial intelligence to provide advanced translation services. This tool is designed to streamline and enhance the translation process by leveraging the OpenAI GPT-3.5 Turbo model.
 
+[Screenshot](img/photo_2023-09-28_19-38-07.jpg) of translation from very informal Russian to English.
+
 **Table of Contents**
 - [AI Enhanced Translator](#ai-enhanced-translator)
   - [Key Features](#key-features)
