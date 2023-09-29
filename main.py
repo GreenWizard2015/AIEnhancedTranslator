@@ -77,18 +77,18 @@ class App(tk.Frame):
   def _UI_fastTranslation(self, owner):
     label = tk.Label(
       owner, justify="left", anchor="w",
-      textvariable=self._localization("Fast and inaccurate translation:")
+      textvariable=self._localization("Fast and inaccurate translation (Google Translate):")
     )
     label.pack(side="top", fill=tk.X)
 
-    self._fastOutputText = tkst.ScrolledText(owner, wrap=tk.WORD)
+    self._fastOutputText = tkst.ScrolledText(owner, wrap=tk.WORD, foreground="darkgrey")
     self._fastOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
     return
   
   def _UI_fullTranslation(self, owner):
     label = tk.Label(
       owner, justify="left", anchor="w",
-      textvariable=self._localization("Slow and improved translation:")
+      textvariable=self._localization("Slow and improved translation (ChatGPT/AI):")
     )
     label.pack(side="top", fill=tk.X)
 
