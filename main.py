@@ -171,12 +171,15 @@ class App(tk.Frame):
   
   def fullTranslated(self, translationResult):
     self._lastAIResult = translationResult
-    self._refineBtn.config(state=tk.DISABLED if translationResult.pending else tk.NORMAL)
+    translation = '' if translationResult is None else translationResult.translation
+    pending = False if translationResult is None else translationResult.pending
+
+    self._refineBtn.config(state=tk.DISABLED if pending else tk.NORMAL)
 
     self._fullOutputText.delete("1.0", tk.END)
-    self._fullOutputText.insert(tk.END, translationResult.translation)
+    self._fullOutputText.insert(tk.END, translation)
 
-    if translationResult.pending:
+    if pending:
       notification = self._localization(
         "Translation is not accurate and will be updated soon."
       ).get()
