@@ -83,7 +83,7 @@ class CWorker(threading.Thread):
   
   def _fullTranslate(self, text, fastTranslation, language):
     if 0 == len(text):
-      yield ""
+      yield "", False
       return
     
     translationProcess = self._assistant.translate(
