@@ -11,6 +11,9 @@ class CWorker(threading.Thread):
     self._forceTranslateEvent = threading.Event()
     self._translatorFast = Translator(service_urls=['translate.google.com'])
     self._assistant = CAIAssistant()
+
+    # TODO: Fix this hack. It's not thread safe. Also check related issues with UI during refinement.
+    self._refinement = None
     return
   
   def run(self):
@@ -21,6 +24,10 @@ class CWorker(threading.Thread):
     while True:
       isForceTranslate = self._forceTranslateEvent.wait(5)
       self._forceTranslateEvent.clear()
+
+      if self._refinement is not None:
+        self._doRefine()
+        continue
 
       userInput = self._events.userInput()
       text = userInput['text']
@@ -63,22 +70,23 @@ class CWorker(threading.Thread):
     text = text.strip()
     try:
       self._events.startTranslate(force)
-      fastText = self._fastTranslate(text, language=language)
+      fastText = self._fastTranslate(text, languageCode=language['code'])
       self._events.fastTranslated(fastText)
       if not force: return
 
       translationProcess = self._fullTranslate(text, fastTranslation=fastText, language=language)
-      for fullText, hasMore in translationProcess:
-        self._events.fullTranslated(fullText, pending=hasMore)
+      for translationResult in translationProcess:
+        self._events.fullTranslated(translationResult)
         if self._forceTranslateEvent.is_set(): break # stop if force another translate
         continue
     finally:
       self._events.endTranslate()
     return
   
-  def _fastTranslate(self, text, language):
+  @lru_cache(maxsize=20)
+  def _fastTranslate(self, text, languageCode):
     if 0 == len(text): return ""
-    translated = self._translatorFast.translate(text, dest=language['code'])
+    translated = self._translatorFast.translate(text, dest=languageCode)
     return translated.text
   
   def _fullTranslate(self, text, fastTranslation, language):
@@ -90,9 +98,7 @@ class CWorker(threading.Thread):
       text, language=language['name'],
       fastTranslation=fastTranslation,
     )
-    for translation in translationProcess:
-      yield translation
-      continue
+    for translation in translationProcess: yield translation
     return
   
   @lru_cache(maxsize=None)
@@ -109,3 +115,18 @@ class CWorker(threading.Thread):
     self._assistant.bindAPI(key)
     return
   
+  def refine(self, previousTranslation):
+    self._refinement = previousTranslation
+    self.forceTranslate()
+    return
+  
+  def _doRefine(self):
+    assert self._refinement is not None
+    previousTranslation = self._refinement
+    self._refinement = None
+    try:
+      res = self._assistant.refine(previousTranslation)
+      self._events.fullTranslated(res)
+    except Exception as e:
+      self._events.error(e)
+    return

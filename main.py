@@ -9,12 +9,12 @@ from core.worker import CWorker
 import dotenv
 
 # main app
-# TODO: figure out how to enforce deep translation via UI
 # TODO: add translation history
 # TODO: add simple translation diff
 class App(tk.Frame):
   def __init__(self, master, languages, configs):
     super().__init__(master)
+    self._lastAIResult = None
     self._configs = configs
     self._localizationMap = {}
     # predefine messages
@@ -91,6 +91,13 @@ class App(tk.Frame):
       textvariable=self._localization("Slow and improved translation (ChatGPT/AI):")
     )
     label.pack(side="top", fill=tk.X)
+    # Button "Refine" to force deep translation, disabled by default
+    self._refineBtn = btn = tk.Button(
+      owner, state=tk.DISABLED,
+      command=self.onRefine,
+      textvariable=self._localization("Refine"),
+    )
+    btn.pack(side="bottom", padx=5, pady=5, anchor="e")
 
     self._fullOutputText = tkst.ScrolledText(owner, wrap=tk.WORD)
     self._fullOutputText.pack(side="top", fill=tk.BOTH, expand=tk.YES)
@@ -162,11 +169,14 @@ class App(tk.Frame):
     self._fastOutputText.insert(tk.END, text)
     return
   
-  def fullTranslated(self, text, pending):
-    self._fullOutputText.delete("1.0", tk.END)
-    self._fullOutputText.insert(tk.END, text)
+  def fullTranslated(self, translationResult):
+    self._lastAIResult = translationResult
+    self._refineBtn.config(state=tk.DISABLED if translationResult.pending else tk.NORMAL)
 
-    if pending:
+    self._fullOutputText.delete("1.0", tk.END)
+    self._fullOutputText.insert(tk.END, translationResult.translation)
+
+    if translationResult.pending:
       notification = self._localization(
         "Translation is not accurate and will be updated soon."
       ).get()
@@ -185,7 +195,10 @@ class App(tk.Frame):
     language = self._language.get()
     code = next((code for code, name in self._languages.items() if name == language), None)
     if code is None: return
- 
+    # discard AI result and disable refine button
+    self._lastAIResult = None
+    self._refineBtn.config(state=tk.DISABLED)
+    # update other stuff
     self._currentLanguage = code
     self._configs['language'] = code
     self._worker.forceTranslate() # hack to force translation
@@ -209,6 +222,14 @@ class App(tk.Frame):
     return
   
   def configs(self): return self._configs
+
+  def onRefine(self, event=None):
+    # check if refine button is enabled
+    if tk.DISABLED == self._refineBtn['state']: return 'break' # prevent unwanted action
+
+    self._worker.refine(self._lastAIResult)
+    self._refineBtn.config(state=tk.DISABLED)
+    return 'break'
 # End of class
 
 def main():

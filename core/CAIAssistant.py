@@ -5,6 +5,13 @@ from langchain.prompts.chat import (ChatPromptTemplate, HumanMessagePromptTempla
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
+from collections import namedtuple
+
+CAITranslationResult = namedtuple(
+  'CAITranslationResult',
+  ['translation', 'pending', 'text', 'language', 'InputLanguage', 'Flags']
+)
+
 class CAIAssistant:
   def __init__(self, promptsFolder=None, openai_api_key=None):
     if promptsFolder is None:
@@ -56,6 +63,8 @@ class CAIAssistant:
     return {k: v for k, v in tmp}
   
   def _executePrompt(self, prompt, variables):
+    if not self._connected: raise Exception('Not connected to API')
+
     rawPrompt = prompt.prompt.format_prompt(**variables).to_string()
     logging.info('Raw prompt: ' + rawPrompt)
     res = prompt.run(variables)
@@ -106,18 +115,35 @@ class CAIAssistant:
     return res['Translation']
   
   def translate(self, text, fastTranslation, language):
-    if not self._connected:
-      raise Exception('Not connected to API')
     # run shallow translation
     raw, translation, done = self._translateShallow(
       text=text, translation=fastTranslation, language=language
     )
-    yield translation, not done
-    if done: return
-    # run deep translation
-    yield self._translateDeep(
-      text=text, translation=translation, language=language,
-      inputLanguage=raw.get('Input language', 'unknown'),
-      flags=raw['Flags']
-    ), False # no more pending translations
+    translationResult = CAITranslationResult(
+      translation=translation, pending=not done,
+      text=text, language=language,
+      InputLanguage=raw.get('Input language', 'unknown'),
+      Flags=raw['Flags'],
+    )
+    yield translationResult
+    if not done: # run deep translation
+      yield self.refine(translationResult)
     return
+  
+  def refine(self, previousTranslation: CAITranslationResult):
+    res = self._translateDeep(
+      text=previousTranslation.text,
+      translation=previousTranslation.translation,
+      language=previousTranslation.language,
+      inputLanguage=previousTranslation.InputLanguage,
+      flags=previousTranslation.Flags,
+    )
+
+    translationResult = CAITranslationResult(
+      translation=res,
+      text=previousTranslation.text, language=previousTranslation.language,
+      InputLanguage=previousTranslation.InputLanguage,
+      Flags=previousTranslation.Flags,
+      pending=False, # no more steps
+    )
+    return translationResult
