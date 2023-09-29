@@ -4,19 +4,10 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import simpledialog
 import tkinter.scrolledtext as tkst
-import json
+import json, os, logging
 from core.worker import CWorker
-# set up logging
-import logging
-logging.basicConfig(
-  filename='debug.log', filemode='w',
-  level=logging.INFO, 
-  format='%(asctime)s %(levelname)s %(message)s'
-)
-# set up environment variables
 import dotenv
-dotenv.load_dotenv('.env')
-dotenv.load_dotenv('.env.local', override=True)
+
 # main app
 # TODO: figure out how to enforce deep translation via UI
 # TODO: add translation history
@@ -221,6 +212,15 @@ class App(tk.Frame):
 # End of class
 
 def main():
+  # set up logging
+  logging.basicConfig(
+    filename='debug.log', filemode='w',
+    level=logging.INFO, 
+    format='%(asctime)s %(levelname)s %(message)s'
+  )
+  # set up environment variables
+  if os.path.exists('.env.local'): dotenv.load_dotenv('.env.local', override=True)
+
   # load languages from data/languages.json
   with open('data/languages.json', 'r') as f: languages = json.load(f)
   # load configs
