@@ -29,6 +29,10 @@ class App(tk.Frame):
     self._master.title("AI Enhanced Translator")
     self._master.geometry("800x600")
     self._UI_init()
+    # bind global keys
+    self._master.bind("<F1>", self.onCopyTranslation)
+    self._master.bind("<F5>", self.onRefine)
+    self._master.bind("<Control-Return>", self.onForceTranslate)
     
     self._worker = CWorker(self)
     self._worker.start()
@@ -232,6 +236,12 @@ class App(tk.Frame):
 
     self._worker.refine(self._lastAIResult)
     self._refineBtn.config(state=tk.DISABLED)
+    return 'break'
+  
+  def onCopyTranslation(self, event=None):
+    translation = self._fullOutputText.get("1.0", tk.END).strip()
+    self._master.clipboard_clear()
+    self._master.clipboard_append(translation)
     return 'break'
 # End of class
 
