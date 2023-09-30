@@ -99,7 +99,7 @@ class App(tk.Frame):
     self._refineBtn = btn = tk.Button(
       owner, state=tk.DISABLED,
       command=self.onRefine,
-      textvariable=self._localization("Refine"),
+      textvariable=self._localization("Refine (F5)")
     )
     btn.pack(side="bottom", padx=5, pady=5, anchor="e")
 
